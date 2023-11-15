@@ -3,7 +3,6 @@ using ManifestGen.Components.Account;
 using ManifestGen.Data;
 using ManifestGen.MinimalAPI;
 using ManifestGen.State;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
-    .AddIdentityCookies(options=>
+    .AddIdentityCookies(options =>
     {
         options.ApplicationCookie.Configure(option =>
         {
@@ -40,7 +39,7 @@ builder.Services.AddAuthentication().AddMicrosoftAccount(microsoftOptions =>
 {
     microsoftOptions.ClientId = configuration["Authentication:Microsoft:ClientId"]!;
     microsoftOptions.ClientSecret = configuration["Authentication:Microsoft:ClientSecret"]!;
-    
+
 });
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

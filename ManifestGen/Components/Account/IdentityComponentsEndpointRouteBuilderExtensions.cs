@@ -40,8 +40,8 @@ namespace Microsoft.AspNetCore.Routing
             accountGroup.MapGet("/PerformExternalLogin", (
                HttpContext context,
                [FromServices] SignInManager<ApplicationUser> signInManager,
-                string provider="Microsoft",
-               string returnUrl="history") =>
+                string provider = "Microsoft",
+               string returnUrl = "history") =>
             {
                 IEnumerable<KeyValuePair<string, StringValues>> query = [
                     new("ReturnUrl", returnUrl),
