@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "defaultProvider": "unpkg",
+  "libraries": [
+    {
+      "library": "prismjs@1.29.0",
+      "destination": "wwwroot/lib/prismjs/",
+      "files": [
+        "themes/prism.css",
+        "components/prism-core.min.js",
+        "components/prism-json.min.js",
+        "plugins/autoloader/prism-autoloader.min.js"
+      ]
+    }
+  ]
+}

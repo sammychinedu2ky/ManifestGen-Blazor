@@ -1,0 +1,121 @@
+﻿@inject ManifestGen.State.AppState AppState
+@using System.Text.Json;
+@using System.Net.Http.Headers
+@using MudBlazor;
+@inject IJSRuntime JS;
+@inject ILogger<RightPane> Logger;
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+@using System.Net.Http
+
+@* @rendermode RenderMode.InteractiveServer *@
+
+
+<MudGrid Class="px-1">
+    <MudItem xs="12" Style="font-size:1.1rem" Class="px-5">
+        <MudText Typo="Typo.h5" Class="pt-4">
+            manifest.json
+        </MudText>
+        <MudButton Variant="Variant.Filled" Size="Size.Small" OnClick="CopyToClipBoard" Color="Color.Tertiary"
+                   Style="position:absolute; right:1.5rem;margin-top:1rem; color:white">Copy</MudButton>
+        @if (jsonCode != null)
+        {
+            <pre class="language-json"><code class="language-json">@jsonCode</code></pre>
+        }
+        else
+        {
+            <pre class="language-json"><code class="language-json"><!--!--><span class="token punctuation">{</span>
+  <span class="token property">"name"</span><span class="token operator">:</span> <span class="token string">"app name"</span><span class="token punctuation">,</span>
+  <span class="token property">"short_name"</span><span class="token operator">:</span> <span class="token string">"short name"</span><span class="token punctuation">,</span>
+  <span class="token property">"theme_color"</span><span class="token operator">:</span> <span class="token string">"#fff"</span><span class="token punctuation">,</span>
+  <span class="token property">"background_color"</span><span class="token operator">:</span> <span class="token string">"#fff"</span><span class="token punctuation">,</span>
+  <span class="token property">"display"</span><span class="token operator">:</span> <span class="token string">"browser"</span><span class="token punctuation">,</span>
+  <span class="token property">"orientation"</span><span class="token operator">:</span> <span class="token string">"portrait"</span><span class="token punctuation">,</span>
+  <span class="token property">"scope"</span><span class="token operator">:</span> <span class="token string">"/"</span><span class="token punctuation">,</span>
+  <span class="token property">"start_url"</span><span class="token operator">:</span> <span class="token string">"/"</span>
+<span class="token punctuation">}</span></code></pre>
+}
+    </MudItem>
+    <MudItem xs="12" Class="pb-4">
+        <MudText Typo="Typo.h5" Class=" px-2">
+            Generate Icons
+        </MudText><MudText Typo="Typo.subtitle1" Class="px-2">
+            The Web App Manifest allows specifying icons of varying sizes. Upload a 512x512 image for the icon by clicking on the field below and we'll generate the remaining sizes.
+        </MudText>
+    </MudItem>
+    <MudItem xs="12" Class="d-flex">
+        <MudFileUpload T="IBrowserFile">
+            <ButtonTemplate>
+                <MudButton Variant="Variant.Filled" Size="Size.Large" Color="Color.Tertiary" OnClick="UploadContent">Generate</MudButton>
+            </ButtonTemplate>
+            </MudFileUpload>
+        <MudFileUpload T="IBrowserFile" Accept=".png, .jpg" FilesChanged="SelectFile" Class="ml-2 pr-3" Style="width:80%">
+            <ButtonTemplate>
+                <MudButton HtmlTag="label" Size="Size.Large" FullWidth="true" Variant="Variant.Outlined" for="@context">@selectedFile</MudButton>
+            </ButtonTemplate>
+        </MudFileUpload>
+    </MudItem>
+
+
+
+</MudGrid>
+    @code {
+    private MarkupString? jsonCode { get; set; }
+    private IBrowserFile? file { get; set; }
+    private string selectedFile { get; set; } = GetSelectedFileDefault();
+    private static string GetSelectedFileDefault() => "Select an Image";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            AppState.DataChanged += async (_, _) =>
+        {
+            jsonCode = new MarkupString(await JS.InvokeAsync<string>("highlightCode", SerializeAppState()));
+            StateHasChanged();
+        };
+            jsonCode = new MarkupString(await JS.InvokeAsync<string>("highlightCode", SerializeAppState()));
+            StateHasChanged();
+        }
+    }
+    private string SerializeAppState()
+    {
+        return JsonSerializer.Serialize(AppState, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+    }
+    private async Task CopyToClipBoard()
+    {
+        await JS.InvokeAsync<bool>("copyToClipBoard", SerializeAppState());
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+        Snackbar.Add("Copied to Clipboard");
+    }
+    private void SelectFile(IBrowserFile file)
+    {
+        this.file = file;
+        selectedFile = file.Name;
+        StateHasChanged();
+    }
+    private async Task UploadContent()
+    {
+        var maxAllowedFile = 1024 * 1024 * 5; // 5mb
+        using var content = new MultipartFormDataContent();
+        if (file is  null || file.Size > maxAllowedFile)
+        {
+            selectedFile = $"Try again with no more than 5mb file.";
+        }
+        else
+        {
+            content.Add(new StringContent(SerializeAppState()), "JsonContent");
+            var fileContent = new StreamContent(file.OpenReadStream(maxAllowedFile));
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "Image", file.Name);
+            var response = await Http.PostAsync("/upload", content);
+            
+            using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
+
+            await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
+        }
+    }
+}

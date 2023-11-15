@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ee6e73">
+    <meta name="description"
+          content="Generate your manifest.json file and required icons easily using this app" />
+    <meta name="keywords" content="Manifest.json generator, generate manifest.json file, pwa" />
+    <meta name="author" content="Samson Amaugo" />
+    <base href="/" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <link href="lib/prismjs/themes/prism.css" rel="stylesheet" />
+    <style>
+        .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+            background: hsl(0deg 0% 100% / 0%);
+        }
+
+        .mud-grid-item.mud-grid-item-xs-12.pb-4 {
+            margin-bottom: -32px;
+        }
+    </style>
+    <script src="lib/prismjs/components/prism-core.min.js"></script>
+    <script src="lib/prismjs/components/prism-json.min.js"></script>
+    <script src="lib/prismjs/plugins/autoloader/prism-autoloader.min.js"></script>
+
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <script src="_framework/blazor.web.js"></script>
+    <script>
+
+        window.highlightCode = (json) => {
+
+            return Prism.highlight(json, Prism.languages.json, 'json');
+
+        }
+        window.copyToClipBoard = async (json) => {
+            await navigator.clipboard.writeText(json)
+            return true;
+        }
+        window.downloadFileFromStream = async (contentStreamReference) => {
+            const arrayBuffer = await contentStreamReference.arrayBuffer();
+            const blob = new Blob([arrayBuffer]);
+            const url = URL.createObjectURL(blob);
+            const anchorElement = document.createElement('a');
+            anchorElement.href = url;
+            anchorElement.download = "app-image.zip"
+            anchorElement.click();
+            anchorElement.remove();
+            URL.revokeObjectURL(url);
+        }
+        window.logout = async(logoutRef)=>{
+            logoutRef.submit();
+        }
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+﻿@page "/"
+@inject ManifestGen.State.AppState AppState
+@rendermode InteractiveWebAssembly
+
+@using MudBlazor
+
+@* @attribute [RenderModeInteractiveServer(prerender: false)] *@
+
+<MyMudLayout>
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+          <LeftPane/>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <RightPane />
+        </MudItem>
+    </MudGrid>
+</MyMudLayout>
+

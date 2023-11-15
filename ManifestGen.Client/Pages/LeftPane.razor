@@ -1,0 +1,45 @@
+﻿@inject ManifestGen.State.AppState AppState
+@using MudBlazor
+
+<MudGrid Class="px-3 pt-3">
+    <MudItem xs="12">
+        <MudText Typo="Typo.body1" Style="font-size:1.3rem">
+            Web App Manifest is a JSON document that provides application metadata for The Progressive Web Apps. Use the form below to generate the JSON file and optionally upload an app icon.
+        </MudText>
+    </MudItem>
+    <MudItem xs="6">
+        <MudTextField Immediate="true" Label=" App Name" @bind-Value=@AppState.Name Variant="Variant.Text"></MudTextField>
+    </MudItem>
+    <MudItem xs="6">
+        <MudTextField Immediate="true" Label="Short Name" @bind-Value=@AppState.ShortName Variant="Variant.Text"></MudTextField>
+    </MudItem>
+    <MudItem xs="6">
+        <MudColorPicker Label="Theme Color" @bind-Text="AppState.ThemeColor" Placeholder="Select Color" />
+    </MudItem>
+    <MudItem xs="6">
+        <MudColorPicker Label="Theme Color" @bind-Text="AppState.BackgroundColor" Placeholder="Select Color" />
+
+    </MudItem>
+    <MudItem xs="6">
+        <MudSelect T="string" Label="Display Mode" @bind-Value=@AppState.Display Variant="Variant.Text">
+            <MudSelectItem Value="@("browser")">Browser</MudSelectItem>
+            <MudSelectItem Value="@("standalone")">Standalone</MudSelectItem>
+            <MudSelectItem Value="@("minimal-ui")">Minimal UI</MudSelectItem>
+            <MudSelectItem Value="@("fullScreen")">FullScreen</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6">
+        <MudSelect T="string" Label="Orientation" @bind-Value=@AppState.Orientation Variant="Variant.Text">
+            <MudSelectItem Value="@("any")">Any</MudSelectItem>
+            <MudSelectItem Value="@("potrait")">Potrait</MudSelectItem>
+            <MudSelectItem Value="@("landscape")">LandScape</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6">
+        <MudTextField Immediate="true" Label="Application Scope" xs="6" @bind-Value=@AppState.Scope Variant="Variant.Text"></MudTextField>
+    </MudItem>
+    <MudItem xs="6">
+        <MudTextField Immediate="true" Label="Start Url" xs="6" @bind-Value=@AppState.StartUrl Variant="Variant.Text"></MudTextField>
+    </MudItem>
+
+</MudGrid>
