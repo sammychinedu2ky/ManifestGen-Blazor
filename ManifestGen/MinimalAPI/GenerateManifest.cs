@@ -26,6 +26,16 @@ namespace ManifestGen.MinimalAPI
                     {
                         var userEmail = context.User.FindFirstValue(ClaimTypes.Email);
                         var user = dbContext.Users.FirstOrDefault(u => u.Email == userEmail);
+
+                        var userFiles = dbContext.UserFiles
+                            .Where(uf => uf.ApplicationUserId == user.Id)
+                            .OrderBy(uf => uf.CreatedAt)
+                            .ToList();
+                        if (userFiles.Count >= 10)
+                        {
+                            var earliestFile = userFiles.First();
+                            dbContext.UserFiles.Remove(earliestFile);
+                        }
                         var userFile = new UserFile
                         {
                             UserFileId = Guid.NewGuid().ToString(),

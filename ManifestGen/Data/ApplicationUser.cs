@@ -14,7 +14,7 @@ namespace ManifestGen.Data
 
         public string? FileName { get; set; }
 
-
+        public DateTime CreatedAt { get; set; }
         public byte[]? ManifestData { get; set; }
 
         public string? ApplicationUserId { get; set; }
