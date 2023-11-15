@@ -1,8 +1,20 @@
 ﻿@inject NavigationManager NavigationManager
-
+@using MudBlazor
+@inject IJSRuntime JS;
+<form action="/Account/PerformExternalLogin" method="post">
+    <AntiforgeryToken />
+    <input type="hidden" name="returnUrl" value="/" />
+    <MudButton ButtonType="ButtonType.Submit" name="provider" value="Microsoft" Variant="Variant.Filled" Size="Size.Small" Color="Color.Tertiary">Login</MudButton>
+</form>
 @code {
-    protected override void OnInitialized()
+    public ElementReference LogInRef { get; set; }
+
+    protected override void OnAfterRender(bool firstRender)
     {
-        NavigationManager.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}", forceLoad: true);
+        if (firstRender)
+        {
+            var jsInProcess = (IJSInProcessRuntime)JS;
+            jsInProcess.InvokeVoid("login", LogInRef);
+        }
     }
 }

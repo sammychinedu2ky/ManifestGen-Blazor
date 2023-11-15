@@ -1,14 +1,122 @@
-﻿page "/auth"
-
+﻿@page "/history"
+@using MudBlazor
 @using Microsoft.AspNetCore.Authorization
-
+@using System.Text.Json
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+@inject IJSRuntime JS;
+@inject ILogger<History> Logger
 @attribute [Authorize]
 @rendermode InteractiveAuto
 
-<PageTitle>Auth</PageTitle>
+<MyMudLayout>
+    <MudGrid Class="d-flex justify-center">
+        <MudItem xs="10" Class="mt-8 ">
+            @if (Loaded is false)
+            {
+                <MudPaper Elevation="4">
+                    <MudSimpleTable Style="overflow-x: auto;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>File Version</th>
+                                <th>Download</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var index in Enumerable.Range(1, 5))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td><MudSkeleton Animation="Animation.Wave" Width="80%" Height="16px" /></td>
+                                    <td><MudSkeleton Animation="Animation.Wave" Width="40%" Height="16px" /></td>
+                                    <td><MudSkeleton Animation="Animation.Wave" Width="40%" Height="16px" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="4">
+                    <MudSimpleTable Style="overflow-x: auto;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>File Version</th>
+                                <th>Download</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (index, file) in files.Select((i, index) => (index, i)))
+                            {
+                                <tr>
+                                    <td>@(index + 1)</td>
+                                    <td>@file.FileName</td>
+                                    <td><MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Tertiary" Title="Download" OnClick="()=>DownloadFile(file.FileId!)" /></td>
+                                    <td><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Tertiary" Title="Delete" OnClick="()=>DeleteFile(file.FileId!)" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudPaper>
 
-<h1>You are authenticated</h1>
+            }
+        </MudItem>
 
-<AuthorizeView>
-    Hello @context.User.Identity?.Name!
-</AuthorizeView>
+    </MudGrid>
+</MyMudLayout>
+
+
+
+@code {
+    private List<FileDetails> files = new();
+    public bool Loaded { get; set; }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var response = await Http.GetAsync("/upload/list");
+            var jsonContent = await response.Content.ReadFromJsonAsync<List<FileDetails>>();
+            files = jsonContent!;
+            Loaded = true;
+            Logger.LogInformation(JsonSerializer.Serialize(jsonContent));
+            StateHasChanged();
+        }
+
+    }
+    public async Task DeleteFile(string id)
+    {
+        try
+        {
+            Loaded = false;
+            var response = await Http.DeleteAsync($"/upload/{id}");
+            files = files.Where(i => i.FileId != id).ToList();
+            Loaded = true;
+        }
+        catch
+        {
+            Snackbar.Clear();
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+            Snackbar.Add("An error occurred");
+            Loaded = true;
+        }
+    }
+    public async Task DownloadFile(string id)
+    {
+        var response = await Http.GetAsync($"/upload/{id}");
+
+        using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
+
+        await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
+    }
+    public class FileDetails
+    {
+        public string? FileId { get; set; }
+        public string? FileName { get; set; }
+    }
+
+}

@@ -27,7 +27,14 @@
                                 <MudAvatar Color="Color.Tertiary">@myContext.User.Identity?.Name!.ToUpper()[0]</MudAvatar>
                             </ActivatorContent>
                             <ChildContent>
-                                <MudMenuItem OnClick="HistoryNav" OnTouch="HistoryNav">History</MudMenuItem>
+                                @if(NavigationManager.Uri.Contains("history")){
+                                    <MudMenuItem OnClick="HomeNav" OnTouch="HomeNav">Home</MudMenuItem>
+                                }
+                                else
+                                {
+                                    <MudMenuItem OnClick="HistoryNav" OnTouch="HistoryNav">History</MudMenuItem>
+                                }
+                               
                                 <MudMenuItem OnClick="Logout" OnTouch="Logout">Sign Out</MudMenuItem>
                             </ChildContent>
                         </MudMenu>
@@ -50,13 +57,14 @@
 
     </MudAppBar>
     <MudMainContent>
-        @Body
+        @ChildContent
     </MudMainContent>
 </MudLayout>
 
 @code {
 
-
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
     public ElementReference LogoutRef { get; set; }
 
     public async Task Logout()
@@ -65,7 +73,11 @@
     }
     public void  HistoryNav()
     {
-        NavigationManager.NavigateTo($"History", forceLoad: true);
+        NavigationManager.NavigateTo($"history", forceLoad: true);
+    }
+    public void HomeNav()
+    {
+        NavigationManager.NavigateTo($"/", forceLoad: true);
     }
 
 }

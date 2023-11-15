@@ -6,5 +6,6 @@ namespace ManifestGen.Data
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
         public DbSet<UserFile> UserFiles { get; set; }
+        public DbSet<ApplicationUser> ApplicationUser { get; set; }
     }
 }

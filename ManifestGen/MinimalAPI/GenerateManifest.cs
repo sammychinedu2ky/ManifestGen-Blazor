@@ -2,6 +2,7 @@
 using ManifestGen.State;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -20,16 +21,19 @@ namespace ManifestGen.MinimalAPI
                     var generate = new ManifestGenerationLogic(json, upload.Image!);
                     context.Items[nameof(ManifestGenerationLogic)] = generate;
                     await generate.ExecuteProcess();
-                    var zipFile = File.ReadAllBytes(generate.ZipPath);
+                    var zipFile = System.IO.File.ReadAllBytes(generate.ZipPath);
                     if (context.User is not null)
                     {
+                        var userEmail = context.User.FindFirstValue(ClaimTypes.Email);
+                        var user = dbContext.Users.FirstOrDefault(u => u.Email == userEmail);
                         var userFile = new UserFile
                         {
                             UserFileId = Guid.NewGuid().ToString(),
-                            FileName = $"manifest-file-{DateTime.Now}",
+                            FileName = $"manifest-file {DateTime.Now}",
                             ManifestData = zipFile,
-                            ApplicationUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                            ApplicationUserId = user.Id
                         };
+
                         dbContext.UserFiles.Add(userFile);
                         dbContext.SaveChanges();
 
@@ -40,9 +44,10 @@ namespace ManifestGen.MinimalAPI
                 catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
+                    Console.WriteLine(e.InnerException);
                     return TypedResults.BadRequest("Bad Request");
                 }
-            }).DisableAntiforgery()
+            }).RequireAuthorization().DisableAntiforgery()
             .AddEndpointFilter(async (context, next) =>
             {
                 var result = await next(context);
@@ -51,6 +56,46 @@ namespace ManifestGen.MinimalAPI
                 return result;
             });
 
+            group.MapGet("/list", async Task<IResult> (HttpContext context, ApplicationDbContext dbContext) =>
+            {
+                var userEmail = context.User?.FindFirstValue(ClaimTypes.Email);
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+                var userFiles = await dbContext.UserFiles
+               .Where(uf => uf.ApplicationUserId == user.Id)
+               .Select(uf => new FileDetails
+               {
+                   FileId = uf.UserFileId,
+                   FileName = uf.FileName
+               })
+               .ToListAsync();
+                return TypedResults.Ok(userFiles);
+            }).RequireAuthorization();
+
+            group.MapGet("/{id}", async Task<Results<FileContentHttpResult, NotFound>> (HttpContext context, string id, ApplicationDbContext dbContext) =>
+            {
+                var userFile = await dbContext.UserFiles.FirstOrDefaultAsync(uf => uf.UserFileId == id);
+                if (userFile is not null)
+                {
+                    return TypedResults.File(userFile.ManifestData!);
+                }
+                return TypedResults.NotFound();
+            }).RequireAuthorization();
+
+            group.MapDelete("/{id}", async Task<Results<Ok, NotFound>> (HttpContext context, string id, ApplicationDbContext dbContext) =>
+            {
+                var userFile = await dbContext.UserFiles
+       .FirstOrDefaultAsync(uf => uf.UserFileId == id);
+
+                if (userFile is not null)
+                {
+                    dbContext.UserFiles.Remove(userFile);
+                    await dbContext.SaveChangesAsync();
+                    return TypedResults.Ok();
+                }
+
+                return TypedResults.NotFound();
+
+            }).RequireAuthorization();
 
             return group;
         }
@@ -59,5 +104,10 @@ namespace ManifestGen.MinimalAPI
     {
         public string JsonContent { get; set; } = default!;
         public IFormFile? Image { get; set; }
+    }
+    public class FileDetails
+    {
+        public string? FileId { get; set; }
+        public string? FileName { get; set; }
     }
 }
