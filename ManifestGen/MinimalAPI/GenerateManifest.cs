@@ -22,13 +22,12 @@ namespace ManifestGen.MinimalAPI
                     context.Items[nameof(ManifestGenerationLogic)] = generate;
                     await generate.ExecuteProcess();
                     var zipFile = System.IO.File.ReadAllBytes(generate.ZipPath);
-                    if (context.User is not null)
+                    if (context.User.Identity!.IsAuthenticated)
                     {
                         var userEmail = context.User.FindFirstValue(ClaimTypes.Email);
                         var user = dbContext.Users.FirstOrDefault(u => u.Email == userEmail);
-
                         var userFiles = dbContext.UserFiles
-                            .Where(uf => uf.ApplicationUserId == user.Id)
+                            .Where(uf => uf.ApplicationUserId == user!.Id)
                             .OrderBy(uf => uf.CreatedAt)
                             .ToList();
                         if (userFiles.Count >= 10)
@@ -41,7 +40,7 @@ namespace ManifestGen.MinimalAPI
                             UserFileId = Guid.NewGuid().ToString(),
                             FileName = $"manifest-file {DateTime.Now}",
                             ManifestData = zipFile,
-                            ApplicationUserId = user.Id
+                            ApplicationUserId = user!.Id
                         };
 
                         dbContext.UserFiles.Add(userFile);
@@ -57,7 +56,7 @@ namespace ManifestGen.MinimalAPI
                     Console.WriteLine(e.InnerException);
                     return TypedResults.BadRequest("Bad Request");
                 }
-            }).RequireAuthorization().DisableAntiforgery()
+            }).DisableAntiforgery()
             .AddEndpointFilter(async (context, next) =>
             {
                 var result = await next(context);
@@ -71,7 +70,7 @@ namespace ManifestGen.MinimalAPI
                 var userEmail = context.User?.FindFirstValue(ClaimTypes.Email);
                 var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
                 var userFiles = await dbContext.UserFiles
-               .Where(uf => uf.ApplicationUserId == user.Id)
+               .Where(uf => uf.ApplicationUserId == user!.Id)
                .Select(uf => new FileDetails
                {
                    FileId = uf.UserFileId,
