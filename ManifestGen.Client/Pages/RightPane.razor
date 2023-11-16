@@ -64,17 +64,15 @@
     private IBrowserFile? file { get; set; }
     private string selectedFile { get; set; } = GetSelectedFileDefault();
     private static string GetSelectedFileDefault() => "Select an Image";
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
             AppState.DataChanged += async (_, _) =>
-        {
-            jsonCode = new MarkupString(await JS.InvokeAsync<string>("highlightCode", SerializeAppState()));
-            StateHasChanged();
-        };
-            jsonCode = new MarkupString(await JS.InvokeAsync<string>("highlightCode", SerializeAppState()));
-            StateHasChanged();
+            {
+                jsonCode = new MarkupString(await JS.InvokeAsync<string>("highlightCode", SerializeAppState()));
+                StateHasChanged();
+            };
         }
     }
     private string SerializeAppState()
@@ -112,9 +110,7 @@
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
             content.Add(fileContent, "Image", file.Name);
             var response = await Http.PostAsync("/upload", content);
-            
             using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
-
             await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
         }
     }
