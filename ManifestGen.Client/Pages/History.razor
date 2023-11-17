@@ -107,11 +107,20 @@
     }
     public async Task DownloadFile(string id)
     {
-        var response = await Http.GetAsync($"/upload/{id}");
-
-        using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
-
-        await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
+        try
+        {
+            var response = await Http.GetAsync($"/upload/{id}");
+            response.EnsureSuccessStatusCode();
+            using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
+            await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
+        }
+        catch
+        {
+            Snackbar.Clear();
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+            Snackbar.Add("An error occurred");
+        }
+        
     }
     public class FileDetails
     {

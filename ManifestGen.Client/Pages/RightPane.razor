@@ -109,9 +109,20 @@
             var fileContent = new StreamContent(file.OpenReadStream(maxAllowedFile));
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
             content.Add(fileContent, "Image", file.Name);
-            var response = await Http.PostAsync("/upload", content);
-            using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
-            await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
+            try
+            {
+                var response = await Http.PostAsync("/upload", content);
+                response.EnsureSuccessStatusCode();
+                using var streamRef = new DotNetStreamReference(stream: response.Content.ReadAsStream());
+                await JS.InvokeVoidAsync("downloadFileFromStream", streamRef);
+            }
+            catch
+            {
+                Snackbar.Clear();
+                Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopRight;
+                Snackbar.Add("An error occurred");
+            }
+            
         }
     }
 }
