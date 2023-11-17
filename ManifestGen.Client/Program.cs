@@ -13,5 +13,6 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
 builder.Services.AddSingleton<AppState>();
 builder.Services.AddMudServices();
-builder.Logging.AddFilter("Microsoft.AspNetCore.Authorization.DefaultAuthorizationService", LogLevel.Error);
+builder.Logging.AddConfiguration(
+    builder.Configuration.GetSection("Logging"));
 await builder.Build().RunAsync();
