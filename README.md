@@ -8,3 +8,9 @@ This application simplifies the creation of your manifest.json file for your Pro
 - Extended Features: Cloned from [my website](https://manifest-gen.netlify.app/) and enhanced with additional functionalities.
 - File Saving: Save your manifest files for later retrieval, making it convenient for ongoing PWA development.
 - Authentication: Added secure authentication for a personalized experience.
+
+## Screenshot
+- Home Page
+  ![Home Page](Images/home.png)
+- History Page
+  ![Hisotry Page](Images/history.png)
