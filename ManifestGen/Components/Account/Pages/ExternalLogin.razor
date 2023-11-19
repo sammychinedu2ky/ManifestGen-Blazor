@@ -75,7 +75,7 @@
         var result = await SignInManager.ExternalLoginSignInAsync(
             externalLoginInfo.LoginProvider,
             externalLoginInfo.ProviderKey,
-            isPersistent: false,
+            isPersistent: true,
             bypassTwoFactor: true);
 
         if (result.Succeeded)
@@ -110,7 +110,7 @@
         var result = await UserManager.CreateAsync(user);
         if (result?.Errors?.FirstOrDefault()?.Code == "DuplicateUserName")
         {
-            await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
+            await SignInManager.SignInAsync(user, isPersistent: true, externalLoginInfo.LoginProvider);
             RedirectManager.RedirectTo(ReturnUrl);
         }
         if (result.Succeeded)
@@ -120,7 +120,7 @@
             {
                 Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
 
-                await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
+                await SignInManager.SignInAsync(user, isPersistent: true, externalLoginInfo.LoginProvider);
                 RedirectManager.RedirectTo(ReturnUrl);
             }
         }
